@@ -1,0 +1,94 @@
+{
+  "tables": [
+    {
+      "TableName": "sitebuilder-sites",
+      "BillingMode": "PAY_PER_REQUEST",
+      "AttributeDefinitions": [
+        { "AttributeName": "id", "AttributeType": "S" },
+        { "AttributeName": "userId", "AttributeType": "S" }
+      ],
+      "KeySchema": [
+        { "AttributeName": "id", "KeyType": "HASH" }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "userId-index",
+          "KeySchema": [
+            { "AttributeName": "userId", "KeyType": "HASH" }
+          ],
+          "Projection": { "ProjectionType": "ALL" }
+        }
+      ]
+    },
+    {
+      "TableName": "sitebuilder-images",
+      "BillingMode": "PAY_PER_REQUEST",
+      "AttributeDefinitions": [
+        { "AttributeName": "id", "AttributeType": "S" },
+        { "AttributeName": "siteId", "AttributeType": "S" }
+      ],
+      "KeySchema": [
+        { "AttributeName": "id", "KeyType": "HASH" }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "siteId-index",
+          "KeySchema": [
+            { "AttributeName": "siteId", "KeyType": "HASH" }
+          ],
+          "Projection": { "ProjectionType": "ALL" }
+        }
+      ]
+    },
+    {
+      "TableName": "sitebuilder-contacts",
+      "BillingMode": "PAY_PER_REQUEST",
+      "AttributeDefinitions": [
+        { "AttributeName": "id", "AttributeType": "S" },
+        { "AttributeName": "siteId", "AttributeType": "S" }
+      ],
+      "KeySchema": [
+        { "AttributeName": "id", "KeyType": "HASH" }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "siteId-index",
+          "KeySchema": [
+            { "AttributeName": "siteId", "KeyType": "HASH" }
+          ],
+          "Projection": { "ProjectionType": "ALL" }
+        }
+      ]
+    },
+    {
+      "TableName": "sitebuilder-analytics",
+      "BillingMode": "PAY_PER_REQUEST",
+      "AttributeDefinitions": [
+        { "AttributeName": "id", "AttributeType": "S" },
+        { "AttributeName": "siteId", "AttributeType": "S" }
+      ],
+      "KeySchema": [
+        { "AttributeName": "id", "KeyType": "HASH" }
+      ],
+      "GlobalSecondaryIndexes": [
+        {
+          "IndexName": "siteId-index",
+          "KeySchema": [
+            { "AttributeName": "siteId", "KeyType": "HASH" }
+          ],
+          "Projection": { "ProjectionType": "ALL" }
+        }
+      ]
+    },
+    {
+      "TableName": "sitebuilder-domains",
+      "BillingMode": "PAY_PER_REQUEST",
+      "AttributeDefinitions": [
+        { "AttributeName": "domain", "AttributeType": "S" }
+      ],
+      "KeySchema": [
+        { "AttributeName": "domain", "KeyType": "HASH" }
+      ]
+    }
+  ]
+}
