@@ -23,7 +23,6 @@ export default function PreviewPage() {
       // Try localStorage draft first (loadDraft returns a canonical Site)
       const draft = loadDraft(id)
       if (draft) {
-        console.log('site:', JSON.parse(JSON.stringify(draft)))
         setSite(draft)
         setLoading(false)
         return
