@@ -5,7 +5,8 @@
 const hasAuthConfig =
   process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID &&
   process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID &&
-  process.env.NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID
+  process.env.NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID &&
+  process.env.NEXT_PUBLIC_COGNITO_CLIENT_SECRET
 
 const amplifyConfig: any = {
   ...(hasAuthConfig && {
