@@ -86,7 +86,11 @@ export default function MinimalTemplate({ site }: TemplateProps) {
       {contentBlocks.length > 0 && (
         <section id="sections" style={{ borderTopColor: t.border }} className="max-w-5xl mx-auto px-6 py-16 border-t space-y-14">
           {contentBlocks.map(section => {
-            const isSide = !!section.photo && section.photoLayout === 'side'
+            const photoLayout = section.photoLayout || 'stacked-below'
+            const isSideLayout = photoLayout.startsWith('side-')
+            const isPhotoAbove = photoLayout === 'stacked-above'
+            const isPhotoLeft = photoLayout === 'side-left'
+
             const content = section.type === 'richtext' ? (
               <p style={{ color: t.textMuted }} className="leading-relaxed mt-2">{section.body}</p>
             ) : (
@@ -100,23 +104,41 @@ export default function MinimalTemplate({ site }: TemplateProps) {
                 ))}
               </ul>
             )
+
             return (
               <div key={section.id} id={`section-${section.id}`}>
                 <h3 style={{ color: t.text, fontFamily: f.headingFamily }} className="text-xl font-bold mb-1">{section.title}</h3>
                 {section.subtitle && <p style={{ color: t.textMuted }} className="text-sm mb-3">{section.subtitle}</p>}
-                {section.photo && !isSide && (
-                  <div className="relative h-64 rounded-xl overflow-hidden my-4">
-                    <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="900px" />
+
+                {!isSideLayout ? (
+                  <>
+                    {section.photo && isPhotoAbove && (
+                      <div className="relative h-64 rounded-xl overflow-hidden my-4">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="900px" />
+                      </div>
+                    )}
+                    {content}
+                    {section.photo && !isPhotoAbove && (
+                      <div className="relative h-64 rounded-xl overflow-hidden my-4">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="900px" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex gap-8 items-start mt-4">
+                    {section.photo && isPhotoLeft && (
+                      <div className="relative w-56 h-56 rounded-xl overflow-hidden shrink-0">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="224px" />
+                      </div>
+                    )}
+                    <div className="flex-1">{content}</div>
+                    {section.photo && !isPhotoLeft && (
+                      <div className="relative w-56 h-56 rounded-xl overflow-hidden shrink-0">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="224px" />
+                      </div>
+                    )}
                   </div>
                 )}
-                {isSide ? (
-                  <div className="flex gap-8 items-start mt-4">
-                    <div className="relative w-56 h-56 rounded-xl overflow-hidden shrink-0">
-                      <Image src={section.photo!} alt={section.title} fill className="object-cover" sizes="224px" />
-                    </div>
-                    <div className="flex-1">{content}</div>
-                  </div>
-                ) : content}
               </div>
             )
           })}

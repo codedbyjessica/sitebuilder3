@@ -90,7 +90,11 @@ export default function SereneTemplate({ site }: TemplateProps) {
         <div className="max-w-3xl mx-auto px-6 pb-8 space-y-8">
           {contentBlocks.map((section, idx) => {
             const isCard = idx % 2 === 0
-            const isSide = !!section.photo && section.photoLayout === 'side'
+            const photoLayout = section.photoLayout || 'stacked-below'
+            const isSideLayout = photoLayout.startsWith('side-')
+            const isPhotoAbove = photoLayout === 'stacked-above'
+            const isPhotoLeft = photoLayout === 'side-left'
+
             const content = section.type === 'richtext' ? (
               <p style={{ color: t.textMuted }} className="leading-relaxed">{section.body}</p>
             ) : (
@@ -112,20 +116,35 @@ export default function SereneTemplate({ site }: TemplateProps) {
               >
                 <h3 style={{ color: t.text, fontFamily: f.headingFamily }} className="text-2xl font-bold mb-2 text-center">{section.title}</h3>
                 {section.subtitle && <p style={{ color: t.textMuted }} className="text-sm mb-6 text-center">{section.subtitle}</p>}
-                {section.photo && !isSide && (
-                  <div className="relative h-64 rounded-2xl overflow-hidden my-6">
-                    <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="700px" />
-                  </div>
-                )}
-                {isSide ? (
-                  <div className="flex gap-8 items-start mt-6 text-left">
-                    <div className="relative w-52 h-52 rounded-2xl overflow-hidden shrink-0">
-                      <Image src={section.photo!} alt={section.title} fill className="object-cover" sizes="208px" />
-                    </div>
-                    <div className="flex-1">{content}</div>
-                  </div>
+
+                {!isSideLayout ? (
+                  <>
+                    {section.photo && isPhotoAbove && (
+                      <div className="relative h-64 rounded-2xl overflow-hidden my-6">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="700px" />
+                      </div>
+                    )}
+                    <div className="mt-4 text-center flex flex-col items-center">{content}</div>
+                    {section.photo && !isPhotoAbove && (
+                      <div className="relative h-64 rounded-2xl overflow-hidden my-6">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="700px" />
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="mt-4 text-center flex flex-col items-center">{content}</div>
+                  <div className="flex gap-8 items-start mt-6 text-left">
+                    {section.photo && isPhotoLeft && (
+                      <div className="relative w-52 h-52 rounded-2xl overflow-hidden shrink-0">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="208px" />
+                      </div>
+                    )}
+                    <div className="flex-1">{content}</div>
+                    {section.photo && !isPhotoLeft && (
+                      <div className="relative w-52 h-52 rounded-2xl overflow-hidden shrink-0">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="208px" />
+                      </div>
+                    )}
+                  </div>
                 )}
               </section>
             )

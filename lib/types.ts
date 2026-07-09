@@ -93,7 +93,7 @@ export interface SiteSection {
   type: 'list' | 'paragraph'
   items: string[]
   photo?: string
-  photoLayout?: 'stacked' | 'side'
+  photoLayout?: 'stacked-below' | 'stacked-above' | 'side-left' | 'side-right'
 }
 
 export interface SiteHours {

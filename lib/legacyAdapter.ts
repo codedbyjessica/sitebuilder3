@@ -24,6 +24,15 @@ function derivedId(siteId: string, suffix: string): string {
   return `${siteId || 'site'}-${suffix}`
 }
 
+// Migrate old photoLayout values ('stacked', 'side') to new values
+function migratePhotoLayout(
+  old: 'stacked' | 'side' | undefined
+): 'stacked-below' | 'stacked-above' | 'side-left' | 'side-right' | undefined {
+  if (old === 'side') return 'side-right'
+  if (old === 'stacked') return 'stacked-below'
+  return undefined
+}
+
 /** Accepts a legacy flat draft/record or an already-current Site; always returns a Site. */
 export function normalizeSite(raw: unknown): Site {
   const d = (raw ?? {}) as Record<string, unknown>
@@ -58,7 +67,9 @@ function migrateV0(d: Partial<BusinessData>): Site {
       hideFromNav: s.hideFromNav,
       subtitle: s.subtitle,
       photo: s.photo,
-      photoLayout: s.photoLayout,
+      photoLayout: migratePhotoLayout(
+        s.photoLayout as 'stacked' | 'side' | undefined
+      ),
     }
     if (s.type === 'list') {
       blocks.push({ ...shared, type: 'list', title: s.title, items: s.items ?? [] })
@@ -124,7 +135,7 @@ function blockToSection(b: RichTextBlock | ListBlock): SiteSection {
     navTitle: b.navTitle,
     hideFromNav: b.hideFromNav,
     photo: b.photo,
-    photoLayout: b.photoLayout,
+    photoLayout: b.photoLayout as 'stacked-below' | 'stacked-above' | 'side-left' | 'side-right' | undefined,
   }
   return b.type === 'list'
     ? { ...shared, type: 'list', items: b.items }

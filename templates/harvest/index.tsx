@@ -94,7 +94,11 @@ export default function HarvestTemplate({ site }: TemplateProps) {
       {contentBlocks.length > 0 && (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
           {contentBlocks.map(section => {
-            const isSide = !!section.photo && section.photoLayout === 'side'
+            const photoLayout = section.photoLayout || 'stacked-below'
+            const isSideLayout = photoLayout.startsWith('side-')
+            const isPhotoAbove = photoLayout === 'stacked-above'
+            const isPhotoLeft = photoLayout === 'side-left'
+
             const content = section.type === 'richtext' ? (
               <p style={{ color: t.textMuted }} className="leading-relaxed text-lg mt-3 max-w-2xl">{section.body}</p>
             ) : (
@@ -111,19 +115,36 @@ export default function HarvestTemplate({ site }: TemplateProps) {
               <section key={section.id} id={`section-${section.id}`} style={{ backgroundColor: t.primaryLight }} className="rounded-[2.5rem] px-8 sm:px-14 py-14">
                 <h3 style={{ color: t.text, fontFamily: f.headingFamily }} className="text-3xl font-bold mb-1">{section.title}</h3>
                 {section.subtitle && <p style={{ color: t.textMuted }} className="text-sm mb-2">{section.subtitle}</p>}
-                {section.photo && !isSide && (
-                  <div className="relative h-72 rounded-3xl overflow-hidden my-6">
-                    <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="1100px" />
+
+                {!isSideLayout ? (
+                  <>
+                    {section.photo && isPhotoAbove && (
+                      <div className="relative h-72 rounded-3xl overflow-hidden my-6">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="1100px" />
+                      </div>
+                    )}
+                    {content}
+                    {section.photo && !isPhotoAbove && (
+                      <div className="relative h-72 rounded-3xl overflow-hidden my-6">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="1100px" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex gap-10 items-start mt-5">
+                    {section.photo && isPhotoLeft && (
+                      <div className="relative w-60 h-60 rounded-3xl overflow-hidden shrink-0">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="240px" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">{content}</div>
+                    {section.photo && !isPhotoLeft && (
+                      <div className="relative w-60 h-60 rounded-3xl overflow-hidden shrink-0">
+                        <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="240px" />
+                      </div>
+                    )}
                   </div>
                 )}
-                {isSide ? (
-                  <div className="flex gap-10 items-start mt-5">
-                    <div className="relative w-60 h-60 rounded-3xl overflow-hidden shrink-0">
-                      <Image src={section.photo!} alt={section.title} fill className="object-cover" sizes="240px" />
-                    </div>
-                    <div className="flex-1 min-w-0">{content}</div>
-                  </div>
-                ) : content}
               </section>
             )
           })}

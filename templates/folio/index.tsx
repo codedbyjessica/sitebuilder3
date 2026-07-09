@@ -117,7 +117,11 @@ export default function FolioTemplate({ site }: TemplateProps) {
 
       {/* Sections */}
       {contentBlocks.map(section => {
-        const isSide = !!section.photo && section.photoLayout === 'side'
+        const photoLayout = section.photoLayout || 'stacked-below'
+        const isSideLayout = photoLayout.startsWith('side-')
+        const isPhotoAbove = photoLayout === 'stacked-above'
+        const isPhotoLeft = photoLayout === 'side-left'
+
         const content = section.type === 'richtext' ? (
           <DropCapParagraph text={section.body} t={t} f={f} />
         ) : (
@@ -137,21 +141,36 @@ export default function FolioTemplate({ site }: TemplateProps) {
               <SectionRule t={t} />
               <h3 style={{ color: t.text, fontFamily: f.headingFamily }} className="text-3xl sm:text-4xl font-bold mb-3 text-center">{section.title}</h3>
               {section.subtitle && <p style={{ color: t.textMuted }} className="italic text-center mb-8">{section.subtitle}</p>}
-              {section.photo && !isSide && (
-                <div className="relative h-64 rounded-xl overflow-hidden my-8">
-                  <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="700px" />
+
+              {!isSideLayout ? (
+                <>
+                  {section.photo && isPhotoAbove && (
+                    <div className="relative h-64 rounded-xl overflow-hidden my-8">
+                      <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="700px" />
+                    </div>
+                  )}
+                  <div className="mt-8">{content}</div>
+                  {section.photo && !isPhotoAbove && (
+                    <div className="relative h-64 rounded-xl overflow-hidden my-8">
+                      <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="700px" />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="mt-8 flex gap-8 items-start">
+                  {section.photo && isPhotoLeft && (
+                    <div className="relative w-48 h-48 rounded-xl overflow-hidden shrink-0">
+                      <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="192px" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">{content}</div>
+                  {section.photo && !isPhotoLeft && (
+                    <div className="relative w-48 h-48 rounded-xl overflow-hidden shrink-0">
+                      <Image src={section.photo} alt={section.title} fill className="object-cover" sizes="192px" />
+                    </div>
+                  )}
                 </div>
               )}
-              <div className="mt-8">
-                {isSide ? (
-                  <div className="flex gap-8 items-start">
-                    <div className="relative w-48 h-48 rounded-xl overflow-hidden shrink-0">
-                      <Image src={section.photo!} alt={section.title} fill className="object-cover" sizes="192px" />
-                    </div>
-                    <div className="flex-1 min-w-0">{content}</div>
-                  </div>
-                ) : content}
-              </div>
             </section>
             <Ornament t={t} />
           </div>

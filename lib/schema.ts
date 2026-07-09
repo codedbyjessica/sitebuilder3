@@ -36,7 +36,7 @@ export interface RichTextBlock extends BlockBase {
   subtitle?: string
   body: string
   photo?: string
-  photoLayout?: 'stacked' | 'side'
+  photoLayout?: 'stacked-below' | 'stacked-above' | 'side-left' | 'side-right'
 }
 
 export interface ListBlock extends BlockBase {
@@ -45,7 +45,7 @@ export interface ListBlock extends BlockBase {
   subtitle?: string
   items: string[]
   photo?: string
-  photoLayout?: 'stacked' | 'side'
+  photoLayout?: 'stacked-below' | 'stacked-above' | 'side-left' | 'side-right'
 }
 
 export interface ContactBlock extends BlockBase {

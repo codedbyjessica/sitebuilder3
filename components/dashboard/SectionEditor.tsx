@@ -31,7 +31,7 @@ export default function SectionEditor({ sections, onChange, siteId, userId }: Pr
     setUploadingId(sectionId)
     const reader = new FileReader()
     reader.onload = () => {
-      update(sectionId, { photo: reader.result as string, photoLayout: 'stacked' })
+      update(sectionId, { photo: reader.result as string, photoLayout: 'stacked-below' })
       setUploadingId(null)
     }
     reader.onerror = () => setUploadingId(null)
@@ -222,14 +222,19 @@ export default function SectionEditor({ sections, onChange, siteId, userId }: Pr
                         <div className="space-y-3">
                           <div>
                             <div className="text-xs text-ink/50 mb-1.5">Layout</div>
-                            <div className="flex gap-2">
-                              {([['stacked', 'Stacked'], ['side', 'Side by side']] as const).map(([val, label]) => (
+                            <div className="grid grid-cols-2 gap-2">
+                              {([
+                                ['stacked-above', '▲ Above'],
+                                ['stacked-below', '▼ Below'],
+                                ['side-left', '◀ Left'],
+                                ['side-right', '▶ Right'],
+                              ] as const).map(([val, label]) => (
                                 <button
                                   key={val}
                                   type="button"
                                   onClick={() => update(section.id, { photoLayout: val })}
                                   className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                                    (section.photoLayout || 'stacked') === val
+                                    (section.photoLayout || 'stacked-below') === val
                                       ? 'bg-maple text-white border-maple'
                                       : 'bg-white text-ink/60 border-ink/15 hover:border-maple/40'
                                   }`}
