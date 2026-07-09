@@ -26,13 +26,13 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2">
             <Link
-              href="/app"
+              href="/login"
               className="hidden sm:block text-sm font-medium text-ink/70 hover:text-ink px-3 py-2 transition-colors"
             >
               Sign in
             </Link>
             <Link
-              href="/app"
+              href="/login"
               className="text-sm font-medium bg-ink text-paper px-4 py-2 rounded-full hover:bg-maple transition-colors"
             >
               Get started
