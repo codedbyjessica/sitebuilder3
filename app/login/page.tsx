@@ -3,12 +3,12 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  signIn,
-  signUp,
-  confirmSignUp,
-  resendSignUpCode,
-} from 'aws-amplify/auth'
-import { configureAmplify, getAuthUser } from '@/lib/amplify/client'
+  cognitoSignIn,
+  cognitoSignUp,
+  cognitoConfirmSignUp,
+  cognitoResendCode,
+  cognitoGetCurrentUser,
+} from '@/lib/cognito/auth'
 import { loadDraft, deleteDraft } from '@/lib/siteStore'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -48,9 +48,10 @@ function LoginForm() {
   const publishId = searchParams.get('publish')
 
   useEffect(() => {
-    configureAmplify()
-    getAuthUser().then((user) => {
+    cognitoGetCurrentUser().then((user) => {
       if (user) router.replace('/app')
+    }).catch(() => {
+      // User not logged in, continue
     })
   }, [router])
 
@@ -67,9 +68,8 @@ function LoginForm() {
     setLoading(true)
     setError('')
     try {
-      await signIn({ username: email, password })
-      const user = await getAuthUser()
-      await afterAuth(user?.userId ?? '')
+      const result = await cognitoSignIn(email, password)
+      await afterAuth(result.userId)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Login failed')
       setLoading(false)
@@ -80,7 +80,7 @@ function LoginForm() {
     setLoading(true)
     setError('')
     try {
-      await signUp({ username: email, password, options: { userAttributes: { email } } })
+      await cognitoSignUp(email, password)
       setMode('confirm')
       setLoading(false)
     } catch (e: unknown) {
@@ -93,10 +93,9 @@ function LoginForm() {
     setLoading(true)
     setError('')
     try {
-      await confirmSignUp({ username: email, confirmationCode: code })
-      await signIn({ username: email, password })
-      const user = await getAuthUser()
-      await afterAuth(user?.userId ?? '')
+      await cognitoConfirmSignUp(email, code)
+      const result = await cognitoSignIn(email, password)
+      await afterAuth(result.userId)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Confirmation failed')
       setLoading(false)
@@ -105,7 +104,7 @@ function LoginForm() {
 
   async function handleResend() {
     try {
-      await resendSignUpCode({ username: email })
+      await cognitoResendCode(email)
     } catch {
       // silent
     }
