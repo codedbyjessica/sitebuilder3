@@ -16,6 +16,9 @@ export async function getSiteBySlug(slug: string): Promise<BusinessData | null> 
       TableName: TABLES.SITES,
       FilterExpression: 'slug = :slug AND published = :pub',
       ExpressionAttributeValues: { ':slug': slug, ':pub': true },
+      // TODO(db): Remove Limit:1 — DynamoDB applies Limit BEFORE FilterExpression, so this
+      // returns null if the matching item isn't the first row scanned. Either drop the limit
+      // or, better, add a GSI on `slug` and use QueryCommand instead of ScanCommand.
       Limit: 1,
     })
   )

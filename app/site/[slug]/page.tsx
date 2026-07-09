@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getSiteBySlug } from '@/lib/dynamo/sites'
 import { getImagesBySite } from '@/lib/dynamo/images'
+import { normalizeSite } from '@/lib/legacyAdapter'
 import TemplateRenderer from '@/templates'
-import type { TemplateData } from '@/lib/types'
 import PageViewTracker from '@/components/site/PageViewTracker'
 
 interface Props {
@@ -17,8 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${site.businessName} — ${site.category}${site.city ? ` in ${site.city}` : ''}`
   const description =
-    site.description ||
-    `${site.businessName} offers ${site.services.slice(0, 3).join(', ')} in ${site.city}.`
+    site.description || `${site.businessName} — ${site.category} in ${site.city}.`
 
   return {
     title,
@@ -50,15 +49,17 @@ function buildJsonLd(site: Awaited<ReturnType<typeof getSiteBySlug>>) {
           addressLocality: site.city,
         }
       : undefined,
-    hasOfferCatalog: {
+    hasOfferCatalog: site.sections?.length ? {
       '@type': 'OfferCatalog',
       name: 'Services',
-      itemListElement: site.services.map((s, i) => ({
-        '@type': 'Offer',
-        position: i + 1,
-        name: s,
-      })),
-    },
+      itemListElement: site.sections.flatMap(sec =>
+        sec.type === 'list' ? sec.items.filter(Boolean).map((item, i) => ({
+          '@type': 'Offer',
+          position: i + 1,
+          name: item,
+        })) : []
+      ),
+    } : undefined,
   }
 }
 
@@ -71,19 +72,7 @@ export default async function SitePage({ params }: Props) {
   const imageRecords = await getImagesBySite(site.id)
   const images = imageRecords.map((img) => img.url)
 
-  const templateData: TemplateData = {
-    businessName: site.businessName,
-    category: site.category,
-    description: site.description,
-    phone: site.phone,
-    email: site.email,
-    address: site.address,
-    city: site.city,
-    services: site.services,
-    hours: site.hours,
-    images,
-    slug: site.id,
-  }
+  const normalized = normalizeSite(site)
 
   const jsonLd = buildJsonLd(site)
 
@@ -96,7 +85,7 @@ export default async function SitePage({ params }: Props) {
         />
       )}
       <PageViewTracker siteId={site.id} />
-      <TemplateRenderer template={site.template} data={templateData} />
+      <TemplateRenderer site={normalized} images={images} />
     </>
   )
 }

@@ -1,6 +1,8 @@
-import type { TemplateData } from '@/lib/types'
+import type { Site } from '@/lib/schema'
 
 export type TemplateProps = {
-  data: TemplateData
+  // All templates render directly from the canonical Site (block-based).
+  site: Site
+  images?: string[]
   preview?: boolean
 }

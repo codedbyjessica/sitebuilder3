@@ -28,8 +28,12 @@ export async function POST(req: NextRequest) {
     slug = `${slug}-${Date.now().toString(36)}`
   }
 
+  // TODO(db): body.id is accepted so images uploaded during the create wizard stay linked to
+  // the site record. Once real auth (JWT/session) is in place, validate that body.id either
+  // doesn't exist yet (add ConditionExpression: 'attribute_not_exists(id)' to the PutCommand)
+  // or belongs to the authenticated user — otherwise any user can overwrite any site by UUID.
   const site: BusinessData = {
-    id: generateId(),
+    id: body.id || generateId(),
     userId,
     slug,
     businessName,
@@ -39,9 +43,21 @@ export async function POST(req: NextRequest) {
     email: body.email || '',
     address: body.address || '',
     city: body.city || '',
-    services: body.services || [],
+    layout: body.layout || 'minimal',
+    fontId: body.fontId || 'classic',
+    navCtas: body.navCtas || [],
+    heroCtas: body.heroCtas || [],
+    heroImage: body.heroImage || '',
+    contactTitle: body.contactTitle || '',
+    hideContact: body.hideContact ?? false,
+    hideContactForm: body.hideContactForm ?? false,
+    footerCopy: body.footerCopy || '',
+    sections: body.sections || [],
     hours: body.hours || {},
-    template: body.template || 'modern',
+    template: body.template || 'cloud',
+    // TODO(db): Accept body.published so handlePublish's first-time POST creates the site as
+    // published. Currently hardcoded false means the first publish saves a draft record —
+    // visitors get 404 even though the editor UI shows "Live".
     published: false,
     createdAt: new Date().toISOString(),
   }

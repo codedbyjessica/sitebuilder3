@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation'
 const navItems = [
   { href: '/app', label: 'Dashboard', icon: '⊞' },
   { href: '/app/create', label: 'New website', icon: '+' },
-  { href: '/app/contacts', label: 'Inquiries', icon: '✉' },
 ]
 
 export default function Sidebar() {
@@ -22,14 +21,14 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-60 min-h-screen bg-white border-r border-gray-100 flex flex-col">
+    <aside className="w-60 min-h-screen bg-white border-r border-ink/10 flex flex-col">
       {/* Logo */}
-      <div className="p-5 border-b border-gray-100">
+      <div className="p-5 border-b border-ink/10">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-indigo-600 rounded-md flex items-center justify-center">
-            <span className="text-white font-bold text-xs">S</span>
+          <div className="w-7 h-7 bg-maple rounded-md flex items-center justify-center">
+            <span className="text-white font-display font-bold text-xs">S</span>
           </div>
-          <span className="font-bold text-gray-900">SiteBuilder</span>
+          <span className="font-display font-semibold text-ink">Sitelit</span>
         </Link>
       </div>
 
@@ -43,8 +42,8 @@ export default function Sidebar() {
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 pathname === item.href
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-maple-light text-maple-deep'
+                  : 'text-ink/60 hover:text-ink hover:bg-paper'
               )}
             >
               <span className="text-base leading-none">{item.icon}</span>
@@ -55,10 +54,10 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="p-3 border-t border-gray-100">
+      <div className="p-3 border-t border-ink/10">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-ink/60 hover:text-ink hover:bg-paper transition-colors"
         >
           <span className="text-base">↩</span>
           Sign out

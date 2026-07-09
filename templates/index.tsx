@@ -1,34 +1,30 @@
-import type { TemplateId, TemplateData } from '@/lib/types'
-import ModernTemplate from './modern'
+import type { ComponentType } from 'react'
+import type { LayoutId } from '@/lib/types'
+import type { Site } from '@/lib/schema'
+import type { TemplateProps } from './types'
 import MinimalTemplate from './minimal'
 import BoldTemplate from './bold'
-import ElegantTemplate from './elegant'
-import FriendlyTemplate from './friendly'
-import ClassicTemplate from './classic'
+import FolioTemplate from './folio'
+import SereneTemplate from './serene'
+import StudioTemplate from './studio'
+import HarvestTemplate from './harvest'
+
+const LAYOUT_MAP: Record<LayoutId, ComponentType<TemplateProps>> = {
+  minimal: MinimalTemplate,
+  bold: BoldTemplate,
+  folio: FolioTemplate,
+  serene: SereneTemplate,
+  studio: StudioTemplate,
+  harvest: HarvestTemplate,
+}
 
 interface TemplateRendererProps {
-  template: TemplateId
-  data: TemplateData
+  site: Site
+  images?: string[]
   preview?: boolean
 }
 
-export default function TemplateRenderer({ template, data, preview }: TemplateRendererProps) {
-  const props = { data, preview }
-
-  switch (template) {
-    case 'modern':
-      return <ModernTemplate {...props} />
-    case 'minimal':
-      return <MinimalTemplate {...props} />
-    case 'bold':
-      return <BoldTemplate {...props} />
-    case 'elegant':
-      return <ElegantTemplate {...props} />
-    case 'friendly':
-      return <FriendlyTemplate {...props} />
-    case 'classic':
-      return <ClassicTemplate {...props} />
-    default:
-      return <ModernTemplate {...props} />
-  }
+export default function TemplateRenderer({ site, images, preview }: TemplateRendererProps) {
+  const Layout = LAYOUT_MAP[site.layout] || MinimalTemplate
+  return <Layout site={site} images={images} preview={preview} />
 }

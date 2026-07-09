@@ -1,18 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getAuthUser } from '@/lib/amplify/client'
 import Input from '@/components/ui/Input'
 import Textarea from '@/components/ui/Textarea'
 import Button from '@/components/ui/Button'
 import TemplateSelector from '@/components/dashboard/TemplateSelector'
-import ImageUpload from '@/components/dashboard/ImageUpload'
-import type { TemplateId, SiteHours } from '@/lib/types'
+import SectionEditor from '@/components/dashboard/SectionEditor'
+import { saveDraft } from '@/lib/siteStore'
+import { normalizeSite } from '@/lib/legacyAdapter'
+import { getAuthUser } from '@/lib/amplify/client'
+import { slugify } from '@/lib/utils'
+import type { TemplateId, LayoutId, FontId, SiteSection } from '@/lib/types'
 
-const STEPS = ['Business info', 'Services', 'Template', 'Photos', 'Review']
-
-const DAYS: (keyof SiteHours)[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+const STEPS = ['Business info', 'Sections', 'Template', 'Review']
 
 interface FormData {
   businessName: string
@@ -22,10 +23,11 @@ interface FormData {
   email: string
   address: string
   city: string
-  services: string[]
-  hours: SiteHours
+  contactTitle: string
+  sections: SiteSection[]
+  layout: LayoutId
   template: TemplateId
-  images: string[]
+  fontId: FontId
 }
 
 const DEFAULT_FORM: FormData = {
@@ -36,75 +38,45 @@ const DEFAULT_FORM: FormData = {
   email: '',
   address: '',
   city: '',
-  services: ['', '', ''],
-  hours: {},
-  template: 'modern',
-  images: [],
+  contactTitle: '',
+  sections: [],
+  layout: 'minimal',
+  template: 'cloud',
+  fontId: 'classic',
 }
 
 export default function CreatePage() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormData>(DEFAULT_FORM)
   const [siteId] = useState(() => crypto.randomUUID())
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [userId, setUserId] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    getAuthUser().then((u) => { if (u) setUserId(u.userId) })
+  }, [])
 
   function updateField<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  function updateService(i: number, val: string) {
-    const updated = [...form.services]
-    updated[i] = val
-    updateField('services', updated)
-  }
-
-  function addService() {
-    updateField('services', [...form.services, ''])
-  }
-
-  function removeService(i: number) {
-    updateField('services', form.services.filter((_, idx) => idx !== i))
-  }
-
-  function updateHour(day: keyof SiteHours, val: string) {
-    updateField('hours', { ...form.hours, [day]: val })
-  }
-
   function canProceed(): boolean {
     if (step === 0) return !!form.businessName.trim()
-    if (step === 1) return form.services.some((s) => s.trim())
     return true
   }
 
-  async function handlePublish() {
-    setSaving(true)
-    setError('')
-    try {
-      const user = await getAuthUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const res = await fetch('/api/sites', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.userId,
-        },
-        body: JSON.stringify({
-          ...form,
-          services: form.services.filter((s) => s.trim()),
-          published: false,
-        }),
-      })
-
-      if (!res.ok) throw new Error('Failed to create site')
-      const { site } = await res.json()
-      router.push(`/app/edit/${site.id}`)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong')
-      setSaving(false)
-    }
+  function handleSaveDraft() {
+    // Build the flat wizard shape, then let normalizeSite construct the canonical Site (blocks).
+    const site = normalizeSite({
+      id: siteId,
+      userId,
+      slug: slugify(form.businessName),
+      ...form,
+      published: false,
+      createdAt: new Date().toISOString(),
+    })
+    saveDraft(site)
+    router.push(`/app/edit/${siteId}`)
   }
 
   return (
@@ -117,22 +89,22 @@ export default function CreatePage() {
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                   i < step
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-maple text-white'
                     : i === step
-                    ? 'bg-indigo-100 text-indigo-600 ring-2 ring-indigo-600'
-                    : 'bg-gray-100 text-gray-400'
+                    ? 'bg-maple-light text-maple ring-2 ring-maple'
+                    : 'bg-ink/8 text-ink/40'
                 }`}
               >
                 {i < step ? '✓' : i + 1}
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 w-8 ${i < step ? 'bg-indigo-600' : 'bg-gray-100'}`} />
+                <div className={`flex-1 h-0.5 w-8 ${i < step ? 'bg-maple' : 'bg-ink/8'}`} />
               )}
             </div>
           ))}
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{STEPS[step]}</h1>
-        <p className="text-sm text-gray-500 mt-1">Step {step + 1} of {STEPS.length}</p>
+        <h1 className="font-display text-2xl font-semibold text-ink">{STEPS[step]}</h1>
+        <p className="text-sm text-ink/50 mt-1">Step {step + 1} of {STEPS.length}</p>
       </div>
 
       {/* Step 0: Business info */}
@@ -158,155 +130,68 @@ export default function CreatePage() {
             rows={4}
           />
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Phone"
-              type="tel"
-              value={form.phone}
-              onChange={(e) => updateField('phone', e.target.value)}
-              placeholder="(555) 000-0000"
-            />
-            <Input
-              label="Email"
-              type="email"
-              value={form.email}
-              onChange={(e) => updateField('email', e.target.value)}
-              placeholder="you@example.com"
-            />
+            <Input label="Phone" type="tel" value={form.phone} onChange={(e) => updateField('phone', e.target.value)} placeholder="(555) 000-0000" />
+            <Input label="Email" type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} placeholder="you@example.com" />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Address"
-              value={form.address}
-              onChange={(e) => updateField('address', e.target.value)}
-              placeholder="123 Main St"
-            />
-            <Input
-              label="City"
-              value={form.city}
-              onChange={(e) => updateField('city', e.target.value)}
-              placeholder="New York, NY"
-            />
+            <Input label="Address" value={form.address} onChange={(e) => updateField('address', e.target.value)} placeholder="123 Main St" />
+            <Input label="City" value={form.city} onChange={(e) => updateField('city', e.target.value)} placeholder="Toronto, ON" />
           </div>
         </div>
       )}
 
-      {/* Step 1: Services + Hours */}
+      {/* Step 1: Sections */}
       {step === 1 && (
-        <div className="space-y-6">
-          <div>
-            <div className="text-sm font-medium text-gray-700 mb-3">Services *</div>
-            <div className="space-y-3">
-              {form.services.map((service, i) => (
-                <div key={i} className="flex gap-2">
-                  <Input
-                    value={service}
-                    onChange={(e) => updateService(i, e.target.value)}
-                    placeholder={`Service ${i + 1} (e.g. Private lessons)`}
-                    className="flex-1"
-                  />
-                  {form.services.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeService(i)}
-                      className="text-gray-400 hover:text-red-500 px-2"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={addService}
-              className="mt-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-            >
-              + Add another service
-            </button>
-          </div>
-
-          <div>
-            <div className="text-sm font-medium text-gray-700 mb-3">Hours (optional)</div>
-            <div className="space-y-2">
-              {DAYS.map((day) => (
-                <div key={day} className="flex items-center gap-3">
-                  <div className="w-24 text-sm capitalize text-gray-600">{day}</div>
-                  <Input
-                    value={form.hours[day] || ''}
-                    onChange={(e) => updateHour(day, e.target.value)}
-                    placeholder="e.g. 9am – 5pm or Closed"
-                    className="flex-1"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+        <div>
+          <p className="text-sm text-ink/50 mb-4">
+            Add sections for your site — services, pricing, about, FAQ, whatever fits your business. You can skip this and add them later.
+          </p>
+          <SectionEditor
+            sections={form.sections}
+            onChange={(s) => updateField('sections', s)}
+            siteId={siteId}
+            userId={userId}
+          />
         </div>
       )}
 
       {/* Step 2: Template */}
       {step === 2 && (
         <TemplateSelector
-          value={form.template}
-          onChange={(t) => updateField('template', t)}
+          layout={form.layout}
+          theme={form.template}
+          font={form.fontId}
+          onLayoutChange={(l) => updateField('layout', l)}
+          onThemeChange={(t) => updateField('template', t)}
+          onFontChange={(f) => updateField('fontId', f)}
         />
       )}
 
-      {/* Step 3: Photos */}
+      {/* Step 3: Review */}
       {step === 3 && (
-        <div>
-          <p className="text-sm text-gray-500 mb-4">
-            Upload photos of your work, your space, or your team. These will appear in your website gallery.
-          </p>
-          <ImageUpload
-            siteId={siteId}
-            images={form.images}
-            onImagesChange={(imgs) => updateField('images', imgs)}
-          />
-        </div>
-      )}
-
-      {/* Step 4: Review */}
-      {step === 4 && (
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-xl p-5 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Business</span>
-              <span className="font-medium">{form.businessName}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Category</span>
-              <span className="font-medium">{form.category || '—'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Services</span>
-              <span className="font-medium">{form.services.filter(Boolean).length} listed</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Template</span>
-              <span className="font-medium capitalize">{form.template}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Photos</span>
-              <span className="font-medium">{form.images.length} uploaded</span>
-            </div>
+          <div className="bg-paper rounded-xl p-5 space-y-3">
+            {[
+              ['Business', form.businessName],
+              ['Category', form.category || '—'],
+              ['Sections', `${form.sections.length} added`],
+              ['Template', form.template],
+            ].map(([label, val]) => (
+              <div key={label} className="flex justify-between text-sm">
+                <span className="text-ink/50">{label}</span>
+                <span className="font-medium capitalize">{val}</span>
+              </div>
+            ))}
           </div>
-
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-
-          <p className="text-sm text-gray-500">
-            Your site will be saved as a draft. You can preview and publish it from the editor.
+          <p className="text-sm text-ink/50">
+            Your site saves as a draft. You can preview it and publish when you're ready — publishing requires signing in.
           </p>
         </div>
       )}
 
       {/* Navigation */}
       <div className="flex justify-between mt-10">
-        <Button
-          variant="ghost"
-          onClick={() => setStep((s) => s - 1)}
-          disabled={step === 0}
-        >
+        <Button variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>
           Back
         </Button>
         {step < STEPS.length - 1 ? (
@@ -314,8 +199,8 @@ export default function CreatePage() {
             Continue
           </Button>
         ) : (
-          <Button onClick={handlePublish} loading={saving}>
-            Save and edit site
+          <Button onClick={handleSaveDraft}>
+            Save and Review
           </Button>
         )}
       </div>

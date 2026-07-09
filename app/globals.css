@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@theme inline {
+  /* Landing page palette */
+  --color-paper: #faf6f0;
+  --color-ink: #211f1a;
+  --color-maple: #b93a2b;
+  --color-maple-deep: #9c2f23;
+  --color-maple-light: #fbeae6;
+  --font-display: var(--font-fraunces), Georgia, serif;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

@@ -1,0 +1,3 @@
+- [SiteBuilder project](project-sitebuilder.md) — Tech stack, routes, templates, design decisions for this SaaS website builder
+- [AWS migration todo](aws_migration_todo.md) — Hero image upload uses base64; needs S3 migration for production
+- [Schema migration](schema-migration.md) — Flat BusinessData → multi-page block-based Site model; phased strangler-fig, Phase 1 done

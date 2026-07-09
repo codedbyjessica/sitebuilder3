@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { TextareaHTMLAttributes, forwardRef } from 'react'
+import FormField from './FormField'
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string
@@ -9,27 +10,20 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, hint, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
+    const fieldId = id || label?.toLowerCase().replace(/\s+/g, '-')
     return (
-      <div className="flex flex-col gap-1">
-        {label && (
-          <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
-            {label}
-          </label>
-        )}
+      <FormField label={label} error={error} hint={hint} id={fieldId}>
         <textarea
           ref={ref}
-          id={inputId}
+          id={fieldId}
           className={cn(
-            'block w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors resize-none',
-            error ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white',
+            'block w-full rounded-lg border px-3 py-2 text-sm text-ink placeholder:text-ink/35 focus:outline-none focus:ring-2 focus:ring-maple focus:border-transparent transition-colors resize-none',
+            error ? 'border-red-300 bg-red-50' : 'border-ink/15 bg-white',
             className
           )}
           {...props}
         />
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
-      </div>
+      </FormField>
     )
   }
 )
